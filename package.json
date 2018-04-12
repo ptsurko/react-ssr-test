@@ -1,0 +1,33 @@
+{
+  "name": "reactssr",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "clean-webpack-plugin": "^0.1.19",
+    "express": "^4.16.3",
+    "isomorphic-fetch": "^2.2.1",
+    "react": "^16.3.1",
+    "react-dom": "^16.3.1",
+    "react-jss": "^8.4.0",
+    "serialize-javascript": "^1.4.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.10.4",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.11.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "nodemon": "^1.17.3",
+    "npm-run-all": "^4.1.2",
+    "webpack": "^3.8.1",
+    "webpack-node-externals": "^1.2.0"
+  },
+  "scripts": {
+    "build": "webpack",
+    "start": "npm-run-all --parallel watch:build watch:server",
+    "watch:build": "webpack -w",
+    "watch:server": "cd dist && nodemon ./server.js"
+  }
+}
