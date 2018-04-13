@@ -1,11 +1,12 @@
 import express from 'express';
 import React from 'react';
-import cors from "cors"
 import {renderToString} from 'react-dom/server'
 import {JssProvider, SheetsRegistry} from 'react-jss'
+import { StaticRouter, matchPath } from "react-router-dom"
 import serialize from "serialize-javascript"
 import App from '../shared/App';
 import { fetchPopularRepos } from '../shared/api';
+import routes from '../shared/routes';
 
 function handleRender(req, res) {
   fetchPopularRepos()
@@ -38,10 +39,43 @@ function handleRender(req, res) {
 const app = express();
 
 app.use(express.static("public"));
-app.get('/', handleRender);
+app.get('*', (req, res, next) => {
+  const activeRoute = routes.find((route) => matchPath(req.url, route)) || {};
+  console.log('activeRoute: ', activeRoute);
+  const promise = activeRoute.fetchInitialData
+    ? activeRoute.fetchInitialData(req.path)
+    : Promise.resolve({})
+
+  promise.then((data) => {
+    const sheets = new SheetsRegistry();
+
+    const body = renderToString(
+      <JssProvider registry={sheets}>
+        <StaticRouter location={req.url} context={{}}>
+          <App data={data} />
+        </StaticRouter>
+      </JssProvider>
+      );
+
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style type="text/css" id="server-side-styles">${sheets.toString()}</style>
+          <script>window.__INITIAL_DATA__ = ${serialize(data)};</script>
+        </head>
+        <body>
+          <div id="root">${body}</div>
+          <script src="/bundle.js" defer></script>
+        </body>
+      </html>`
+    );
+  }).catch(next);
+});
 app.use((err, req, res, next) => {
-  res.status(500)
-  res.render('error', { error: err })
+  res.status(500);
+  console.log(err);
+  res.json({ message: err.toString() });
 });
 
 // Start server
